@@ -12,8 +12,7 @@ async def test_get_post_successfully(client: AsyncClient, session: AsyncSession)
     # given
     # 서버 내에 Post 데이터가 저장되어 있다.
     post = Post(
-        title="title",
-        content="content",
+        contents="content",
     )
     session.add(post)
     await session.commit()
@@ -31,8 +30,7 @@ async def test_get_post_successfully(client: AsyncClient, session: AsyncSession)
     data = response.json()
     assert data == {
         "id": post.id,
-        "title": post.title,
-        "content": post.content,
+        "contents": post.contents,
         "created_at": post.created_at.isoformat(),
     }
 

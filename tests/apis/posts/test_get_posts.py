@@ -12,12 +12,10 @@ async def test_get_posts_successfully(client: AsyncClient, session: AsyncSession
     # given
     # 서버 내에 여러 개의 Post 데이터가 저장되어 있다.
     post_1 = Post(
-        title="title 1",
-        content="content 1",
+        contents="content 1",
     )
     post_2 = Post(
-        title="title 2",
-        content="content 2",
+        contents="content 2",
     )
     session.add_all([post_1, post_2])
     await session.commit()
@@ -37,14 +35,12 @@ async def test_get_posts_successfully(client: AsyncClient, session: AsyncSession
     assert data == [
         {
             "id": post_2.id,
-            "title": post_2.title,
-            "content": post_2.content,
+            "contents": post_2.contents,
             "created_at": post_2.created_at.isoformat(),
         },
         {
             "id": post_1.id,
-            "title": post_1.title,
-            "content": post_1.content,
+            "contents": post_1.contents,
             "created_at": post_1.created_at.isoformat(),
         },
     ]
