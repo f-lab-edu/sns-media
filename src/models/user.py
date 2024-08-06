@@ -8,3 +8,7 @@ class User(SQLModel, table=True):
     email: str = Field(unique=True, nullable=False)
     username: str = Field(nullable=False)
     password: str = Field(nullable=False)
+
+    @classmethod
+    def create(cls, email: str, username: str, password: str) -> "User":
+        return cls(email=email, username=username, password=password)
