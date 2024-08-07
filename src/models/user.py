@@ -12,3 +12,6 @@ class User(SQLModel, table=True):
     @classmethod
     def create(cls, email: str, username: str, password: str) -> "User":
         return cls(email=email, username=username, password=password)
+
+    def __repr__(self) -> str:
+        return f"<User {self.id}: {self.email}>"

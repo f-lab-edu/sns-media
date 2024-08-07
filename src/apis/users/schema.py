@@ -16,3 +16,12 @@ class UserSignupResponse(BaseModel):
 
     class Config:
         from_attributes = True
+
+
+class UserSigninRequest(BaseModel):
+    email: str
+    password: str
+
+
+class JWTResponse(BaseModel):
+    access_token: str
