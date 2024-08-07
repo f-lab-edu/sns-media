@@ -1,7 +1,7 @@
 from fastapi import APIRouter
 from starlette import status
 
-from src.apis.users import sign_up
+from src.apis.users.handler import sign_up
 
 user_router = APIRouter(prefix="/users", tags=["users"])
 
