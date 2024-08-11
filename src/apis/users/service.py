@@ -39,6 +39,10 @@ class UserService:
         user = await self.session.scalar(select(User).where(User.email == email))
         return user
 
+    async def get_user_by_id(self, user_id: str) -> Type[User] | None:
+        user = await self.session.scalar(select(User).where(User.id == user_id))
+        return user
+
     async def verify_password(self, plane_password: str, hashed_password: str) -> bool:
         return bcrypt.checkpw(
             plane_password.encode(self.encoding),
@@ -54,3 +58,11 @@ class UserService:
             self.secret_key,
             algorithm=self.jwt_algorithm,
         )
+
+    async def decode_jwt(self, access_token: str) -> str:
+        payload: dict = jwt.decode(
+            access_token,
+            self.secret_key,
+            algorithms=self.jwt_algorithm,
+        )
+        return payload["user_id"]
