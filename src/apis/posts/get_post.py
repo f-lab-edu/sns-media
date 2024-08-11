@@ -11,8 +11,7 @@ from src.models.post import Post
 
 class GetPostResponse(BaseModel):
     id: int
-    title: str
-    content: str
+    contents: str
     created_at: datetime.datetime
 
 
@@ -24,7 +23,6 @@ async def handler(
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
     return GetPostResponse(
         id=post.id,
-        title=post.title,
-        content=post.content,
+        contents=post.contents,
         created_at=post.created_at,
     )
