@@ -5,7 +5,7 @@ from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
 
 from src.apis.dependencies import get_session
-from src.apis.posts.get_post import GetPostResponse
+from src.apis.posts.schema import GetPostResponse
 from src.apis.users.service import UserService
 from src.models.post import Post
 from src.models.user import User
