@@ -11,7 +11,7 @@ help:
 	@echo "  help           : Display this help message"
 
 install:
-	poetry install --without dev
+	poetry install --without dev && pip wheel --no-cache-dir --use-pep517 "pycrypto (==2.6.1)"
 
 install-dev:
 	poetry install && poetry run pre-commit install
