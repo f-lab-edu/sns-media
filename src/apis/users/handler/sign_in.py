@@ -14,11 +14,11 @@ async def handler(
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
 
-    varified: bool = await user_service.verify_password(
+    verified: bool = await user_service.verify_password(
         plane_password=request.password, hashed_password=user.password
     )
 
-    if not varified:
+    if not verified:
         raise HTTPException(status_code=401, detail="Incorrect password")
 
     access_token: str = await user_service.create_jwt(user_id=user.id)
