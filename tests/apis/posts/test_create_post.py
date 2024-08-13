@@ -5,26 +5,44 @@ from fastapi import status
 from httpx import AsyncClient
 from sqlmodel.ext.asyncio.session import AsyncSession
 
+from src.apis.users.service import UserService
 from src.models.post import Post
+from src.models.user import User
 
 
-# `POST /posts/{post_id}` API가 성공적으로 동작한다.
+# 공통적으로 사용되는 사용자 생성 및 JWT 토큰 생성 로직을 함수로 분리
+async def create_user_and_get_jwt(session: AsyncSession) -> dict:
+    user = User(
+        email="test@gmail.com",
+        password="test1234",
+        username="user_name",
+    )
+    session.add(user)
+    await session.commit()
+    await session.refresh(user)
+
+    user_service = UserService(session)
+    jwt = await user_service.create_jwt(user.id)
+
+    return {"Authorization": f"Bearer {jwt}"}
+
+
 @pytest.mark.asyncio
 async def test_create_post_successfully(client: AsyncClient, session: AsyncSession):
+    headers = await create_user_and_get_jwt(session)
+
     # when
-    # `POST /posts/{post_id}` API를 호출한다.
     response = await client.post(
         "/posts",
         json={
             "contents": "content",
         },
+        headers=headers,
     )
 
     # then
-    # 응답 상태 코드가 201이어야 한다.
     assert response.status_code == status.HTTP_201_CREATED
 
-    # 응답 본문이 예상한 형식과 같아야 한다.
     data = response.json()
     assert data == {
         "id": 1,
@@ -32,47 +50,49 @@ async def test_create_post_successfully(client: AsyncClient, session: AsyncSessi
         "created_at": data["created_at"],
     }
 
-    # 서버 내에 Post 데이터가 저장되어 있어야 한다.
     post = await session.get(Post, 1)
     assert post.id == 1
     assert post.contents == "content"
     assert post.created_at == datetime.datetime.fromisoformat(data["created_at"])
 
 
-# `POST /posts/{post_id}` API가 title 필드에 대해 Request Validation으로 실패한다.
 @pytest.mark.asyncio
-async def test_create_post_failed_by_title_validation(client: AsyncClient):
+async def test_create_post_failed_by_title_validation(
+    client: AsyncClient, session: AsyncSession
+):
+    headers = await create_user_and_get_jwt(session)
+
     # when
-    # `POST /posts/{post_id}` API를 호출한다.
     response = await client.post(
         "/posts",
         json={
             "content": "content",
         },
+        headers=headers,
     )
 
     # then
-    # 응답 상태 코드가 422이어야 한다.
     assert response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
 
 
-# `POST /posts/{post_id}` API가 content 필드에 대해 Request Validation으로 실패한다.
 @pytest.mark.asyncio
-async def test_create_post_failed_by_content_validation(client: AsyncClient):
+async def test_create_post_failed_by_content_validation(
+    client: AsyncClient, session: AsyncSession
+):
+    headers = await create_user_and_get_jwt(session)
+
     # given
-    # content 필드가 500자를 초과하는 값을 가진다.
     contents = "a" * 501
 
     # when
-    # `POST /posts/{post_id}` API를 호출한다.
     response = await client.post(
         "/posts",
         json={
             "title": "title",
             "contents": contents,
         },
+        headers=headers,
     )
 
     # then
-    # 응답 상태 코드가 422이어야 한다.
     assert response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
