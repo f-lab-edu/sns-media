@@ -1,4 +1,5 @@
 import uuid
+from datetime import datetime
 from typing import Annotated
 
 from fastapi import Depends
@@ -15,8 +16,10 @@ class FollowService:
     async def create_follow(
         self, followee_id: uuid.UUID, follower_id: uuid.UUID
     ) -> Follow:
-        follow: Follow | None = Follow.create(
-            followee_id=followee_id, follower_id=follower_id
+        follow: Follow | None = Follow(
+            followee_id=followee_id,
+            follower_id=follower_id,
+            created_at=datetime.utcnow(),
         )
 
         self.session.add(follow)
