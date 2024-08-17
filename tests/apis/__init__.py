@@ -7,7 +7,7 @@ from src.models.user import User
 async def create_user_and_get_jwt(session: AsyncSession) -> dict:
     user = User(
         email="test@gmail.com",
-        password="test1234",
+        password="<PASSWORD>",
         username="user_name",
     )
     session.add(user)
