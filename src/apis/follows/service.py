@@ -3,6 +3,7 @@ from datetime import datetime
 from typing import Annotated
 
 from fastapi import Depends
+from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
 
 from src.apis.dependencies import get_session
@@ -27,3 +28,16 @@ class FollowService:
         await self.session.refresh(follow)
 
         return follow
+
+    async def get_follower_list(self, user_id: uuid.UUID) -> list[uuid.UUID]:
+        follows = await self.session.exec(
+            select(Follow).where(Follow.followee_id == user_id)
+        )
+
+        print(follows, "SAdsadfafasd")
+
+        follower_list: list[uuid.UUID] = []
+        for follow in follows:
+            follower_list.append(follow.follower_id)
+
+        return follower_list
