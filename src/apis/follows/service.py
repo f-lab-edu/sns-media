@@ -34,10 +34,15 @@ class FollowService:
             select(Follow).where(Follow.followee_id == user_id)
         )
 
-        print(follows, "SAdsadfafasd")
-
-        follower_list: list[uuid.UUID] = []
-        for follow in follows:
-            follower_list.append(follow.follower_id)
+        follower_list: list[uuid.UUID] = [follow.follower_id for follow in follows]
 
         return follower_list
+
+    async def get_following_list(self, user_id: uuid.UUID) -> list[uuid.UUID]:
+        follows = await self.session.exec(
+            select(Follow).where(Follow.follower_id == user_id)
+        )
+
+        following_list: list[uuid.UUID] = [follow.followee_id for follow in follows]
+
+        return following_list

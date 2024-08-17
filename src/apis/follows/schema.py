@@ -15,3 +15,7 @@ class CreateFollowResponse(BaseModel):
 
 class GetFollowListResponse(BaseModel):
     follower_list: List[uuid.UUID]
+
+
+class GetFollowingListResponse(BaseModel):
+    following_list: List[uuid.UUID]
