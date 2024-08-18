@@ -6,7 +6,7 @@ F-lab에서 사용하는 Python backend project template 입니다.
 
 ### Pre-requisites
 
-- Python 3.11 or higher
+- Python 3.10 or higher
 - [Poetry](https://python-poetry.org/docs/#installation)
 
 ### Install dependencies
