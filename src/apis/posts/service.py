@@ -2,11 +2,12 @@ import uuid
 from typing import Annotated, Sequence
 
 from fastapi import Depends, HTTPException
-from sqlmodel import select
+from sqlmodel import col, select
 from sqlmodel.ext.asyncio.session import AsyncSession
 
 from src.apis.dependencies import get_session
 from src.apis.posts.schema import CreatePostRequest
+from src.models.follow import Follow
 from src.models.post import Post
 
 
@@ -42,3 +43,16 @@ class PostService:
         await self.session.refresh(post)
 
         return post
+
+    async def get_following_post(self, user_id: uuid.UUID) -> Sequence[Post]:
+        posts = await self.session.exec(
+            select(Post)
+            .select_from(Follow)
+            .distinct()
+            .where(Follow.follower_id == user_id)
+            .order_by(col(Post.created_at).desc())
+        )
+
+        posts = posts.all()
+
+        return posts
