@@ -51,6 +51,7 @@ async def test_get_posts_successfully(client: AsyncClient, session: AsyncSession
         {
             "id": post_2.id,
             "contents": post_2.contents,
+            "writer": str(post_2.writer),
             "created_at": post_2.created_at.isoformat(),
         }
     ]

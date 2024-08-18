@@ -42,6 +42,7 @@ async def test_get_post_successfully(client: AsyncClient, session: AsyncSession)
     assert data == {
         "id": post.id,
         "contents": post.contents,
+        "writer": str(post.writer),
         "created_at": post.created_at.isoformat(),
     }
 

@@ -1,6 +1,6 @@
 from typing import List
 
-from fastapi import Depends
+from fastapi import Depends, HTTPException
 
 from src.apis.posts.schema import GetPostResponse
 from src.apis.posts.service import PostService
@@ -16,13 +16,18 @@ async def handler(
 ) -> List[GetPostResponse]:
     user_id: str = await user_service.decode_jwt(access_token)
     user: User | None = await user_service.get_user_by_id(user_id)
-    posts = await post_service.get_user_posts(user_id=user.id)
+
+    post_list = await post_service.get_following_post(user_id=user.id)
+
+    if not post_list:
+        raise HTTPException(status_code=404, detail="Post not found")
+
     return [
         GetPostResponse(
             id=post.id,
             contents=post.contents,
-            created_at=post.created_at,
             writer=post.writer,
+            created_at=post.created_at,
         )
-        for post in posts
+        for post in post_list
     ]

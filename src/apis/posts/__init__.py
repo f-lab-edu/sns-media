@@ -1,6 +1,8 @@
+from typing import List
+
 from fastapi import APIRouter, status
 
-from src.apis.posts.handler import create_post, get_post, get_posts
+from src.apis.posts.handler import create_post, get_following_posts, get_post, get_posts
 from src.apis.posts.schema import CreatePostResponse, GetPostResponse
 
 post_router = APIRouter(prefix="/posts", tags=["posts"])
@@ -16,7 +18,15 @@ post_router.add_api_route(
     methods=["GET"],
     path="",
     endpoint=get_posts.handler,
-    response_model=list[GetPostResponse],
+    response_model=List[GetPostResponse],
+    status_code=status.HTTP_200_OK,
+)
+
+post_router.add_api_route(
+    methods=["GET"],
+    path="/following",
+    endpoint=get_following_posts.handler,
+    response_model=List[GetPostResponse],
     status_code=status.HTTP_200_OK,
 )
 

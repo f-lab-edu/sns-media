@@ -1,4 +1,5 @@
 import datetime
+import uuid
 
 from pydantic import BaseModel, Field
 
@@ -16,4 +17,5 @@ class CreatePostResponse(BaseModel):
 class GetPostResponse(BaseModel):
     id: int
     contents: str
+    writer: uuid.UUID
     created_at: datetime.datetime
