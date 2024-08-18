@@ -21,5 +21,6 @@ async def handler(
     return GetPostResponse(
         id=post.id,
         contents=post.contents,
+        writer=post.writer,
         created_at=post.created_at,
     )

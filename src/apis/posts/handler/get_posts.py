@@ -1,3 +1,5 @@
+from typing import List
+
 from fastapi import Depends
 
 from src.apis.posts.schema import GetPostResponse
@@ -11,7 +13,7 @@ async def handler(
     access_token: str = Depends(get_authorization_header),
     user_service: UserService = Depends(),
     post_service: PostService = Depends(),
-) -> list[GetPostResponse]:
+) -> List[GetPostResponse]:
     user_id: str = await user_service.decode_jwt(access_token)
     user: User | None = await user_service.get_user_by_id(user_id)
     posts = await post_service.get_user_posts(user_id=user.id)
@@ -20,7 +22,7 @@ async def handler(
             id=post.id,
             contents=post.contents,
             created_at=post.created_at,
-            updated_at=post.updated_at,
+            writer=post.writer,
         )
         for post in posts
     ]
