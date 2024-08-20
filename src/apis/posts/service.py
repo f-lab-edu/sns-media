@@ -47,10 +47,12 @@ class PostService:
     async def get_following_post(self, user_id: uuid.UUID) -> Sequence[Post]:
         posts = await self.session.exec(
             select(Post)
-            .select_from(Follow)
+            .select_from(Post)
+            .join(Follow, Post.writer == Follow.followee_id)
             .distinct()
             .where(Follow.follower_id == user_id)
             .order_by(col(Post.created_at).desc())
+            .limit(100)
         )
 
         posts = posts.all()
