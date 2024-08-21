@@ -16,6 +16,7 @@ greenlet = "^3.0.2"
 bcrypt = "^4.2.0"
 jose = "^1.0.0"
 python-jose = "^3.3.0"
+redis = "^5.0.8"
 
 
 [tool.poetry.group.dev.dependencies]
