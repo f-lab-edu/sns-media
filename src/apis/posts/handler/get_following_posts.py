@@ -1,7 +1,7 @@
 import json
 from typing import List
 
-from fastapi import Depends, HTTPException
+from fastapi import BackgroundTasks, Depends, HTTPException
 
 from src.apis.posts.schema import GetPostResponse
 from src.apis.posts.service import PostService
@@ -12,6 +12,7 @@ from src.security import get_authorization_header
 
 
 async def handler(
+    background_tasks: BackgroundTasks,
     access_token: str = Depends(get_authorization_header),
     user_service: UserService = Depends(),
     post_service: PostService = Depends(),
@@ -39,7 +40,11 @@ async def handler(
         for post in post_list
     ]
 
-    data_list = [item.model_dump_json() for item in data]
-    cache.set(user_id + "post", json.dumps(data_list))
+    if not cache.get(user_id + "post"):
+        background_tasks.add_task(
+            post_service.caching_following_posts_list,
+            post_data=data,
+            user_id=user_id,
+        )
 
     return data
