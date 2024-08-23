@@ -73,3 +73,14 @@ async def test_get_following_posts(client: AsyncClient, session: AsyncSession):
     for post in response.json():
         assert post["writer"] in user_ids
         assert post["writer"] != user_id
+
+    start_time = time.time()
+    cache_response = await client.get(f"/posts/following", headers=headers)
+    print(
+        "Time took to process the request and return response is {} sec".format(
+            time.time() - start_time
+        )
+    )
+
+    assert cache_response.status_code == 200
+    assert cache_response.json() == response.json()

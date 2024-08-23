@@ -1,12 +1,15 @@
+import datetime
+import json
 import uuid
-from typing import Annotated, Sequence
+from typing import Annotated, List, Sequence
 
 from fastapi import Depends, HTTPException
 from sqlmodel import col, select
 from sqlmodel.ext.asyncio.session import AsyncSession
 
 from src.apis.dependencies import get_session
-from src.apis.posts.schema import CreatePostRequest
+from src.apis.posts.schema import CreatePostRequest, GetPostResponse
+from src.cache import redis_client
 from src.models.follow import Follow
 from src.models.post import Post
 
@@ -58,3 +61,11 @@ class PostService:
         posts = posts.all()
 
         return posts
+
+    @staticmethod
+    def caching_following_posts_list(post_data: List[GetPostResponse], user_id: str):
+        cache = redis_client
+        data_list = [item.model_dump_json() for item in post_data]
+        cache.set(
+            user_id + "post", json.dumps(data_list), datetime.timedelta(seconds=60)
+        )
