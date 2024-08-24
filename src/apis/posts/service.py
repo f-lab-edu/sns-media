@@ -67,5 +67,28 @@ class PostService:
         cache = redis_client
         data_list = [item.model_dump_json() for item in post_data]
         cache.set(
-            user_id + "post", json.dumps(data_list), datetime.timedelta(seconds=60)
+            user_id + "_post", json.dumps(data_list), datetime.timedelta(seconds=60)
         )
+
+    @staticmethod
+    def add_caching_follower_posts_list(post: Post, followers_id: List[uuid.UUID]):
+        cache = redis_client
+
+        item = GetPostResponse(
+            id=post.id,
+            contents=post.contents,
+            writer=post.writer,
+            created_at=post.created_at,
+        )
+
+        for follower_id in followers_id:
+            if cache_data := cache.get(str(follower_id) + "_post"):
+                cache_data = json.loads(cache_data)
+                cache_data.insert(0, item.model_dump_json())
+                if len(cache_data) > 100:
+                    cache_data = cache_data[0 : -(len(cache_data) - 100)]
+                cache.set(
+                    str(follower_id) + "_post",
+                    json.dumps(cache_data),
+                    datetime.timedelta(seconds=60),
+                )
