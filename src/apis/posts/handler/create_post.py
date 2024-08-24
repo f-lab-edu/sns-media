@@ -1,7 +1,7 @@
 import uuid
 from typing import List
 
-from fastapi import Depends
+from fastapi import BackgroundTasks, Depends
 
 from src.apis.follows.service import FollowService
 from src.apis.posts.schema import CreatePostRequest, CreatePostResponse
@@ -13,6 +13,7 @@ from src.security import get_authorization_header
 
 async def handler(
     request: CreatePostRequest,
+    background_tasks: BackgroundTasks,
     access_token: str = Depends(get_authorization_header),
     user_service: UserService = Depends(),
     follow_service: FollowService = Depends(),
@@ -24,7 +25,11 @@ async def handler(
     followers_id: List[uuid.UUID] = await follow_service.get_follower_list(
         uuid.UUID(user_id)
     )
-    post_service.add_caching_follower_posts_list(post, followers_id)
+    background_tasks.add_task(
+        post_service.add_caching_follower_posts_list,
+        post,
+        followers_id,
+    )
 
     return CreatePostResponse(
         id=post.id, contents=post.contents, created_at=post.created_at
