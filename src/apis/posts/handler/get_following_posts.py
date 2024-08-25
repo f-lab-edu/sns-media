@@ -21,7 +21,7 @@ async def handler(
     user: User | None = await user_service.get_user_by_id(user_id)
     cache = redis_client
 
-    if data_list := cache.get(user_id + "post"):
+    if data_list := cache.get(user_id + "_post"):
         data_list = json.loads(data_list)
         return [GetPostResponse(**json.loads(item)) for item in data_list]
 
@@ -40,7 +40,7 @@ async def handler(
         for post in post_list
     ]
 
-    if not cache.get(user_id + "post"):
+    if not cache.get(user_id + "_post"):
         background_tasks.add_task(
             post_service.caching_following_posts_list,
             post_data=data,
