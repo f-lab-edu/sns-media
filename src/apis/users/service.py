@@ -1,7 +1,7 @@
 import os
 import uuid
 from datetime import datetime, timedelta
-from typing import Annotated, Type
+from typing import Annotated, Sequence, Type
 
 import bcrypt
 from fastapi import Depends
@@ -53,7 +53,7 @@ class UserService:
         return jwt.encode(
             {
                 "user_id": str(user_id),
-                "exp": datetime.now() + timedelta(hours=3),
+                "exp": datetime.now() + timedelta(hours=12),
             },
             self.secret_key,
             algorithm=self.jwt_algorithm,
@@ -66,3 +66,8 @@ class UserService:
             algorithms=self.jwt_algorithm,
         )
         return payload["user_id"]
+
+    async def get_users_list(self) -> Sequence[User] | None:
+        users = await self.session.exec(select(User))
+        users_list = users.all()
+        return users_list

@@ -1,9 +1,16 @@
 from fastapi import APIRouter
 from starlette import status
 
-from src.apis.users.handler import sign_in, sign_up
+from src.apis.users.handler import sign_in, sign_up, user_list
 
 user_router = APIRouter(prefix="/users", tags=["users"])
+
+user_router.add_api_route(
+    methods=["GET"],
+    path="/list",
+    endpoint=user_list.handler,
+    status_code=status.HTTP_200_OK,
+)
 
 user_router.add_api_route(
     methods=["POST"],

@@ -23,5 +23,9 @@ class UserSigninRequest(BaseModel):
     password: str
 
 
+class UserResponse(BaseModel):
+    id: uuid.UUID
+
+
 class JWTResponse(BaseModel):
     access_token: str
