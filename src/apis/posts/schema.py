@@ -19,3 +19,7 @@ class GetPostResponse(BaseModel):
     contents: str
     writer: uuid.UUID
     created_at: datetime.datetime
+
+
+class GetFollowingPostResponse(BaseModel):
+    id: int

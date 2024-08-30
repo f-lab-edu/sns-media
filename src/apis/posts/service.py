@@ -8,7 +8,7 @@ from sqlmodel import col, select
 from sqlmodel.ext.asyncio.session import AsyncSession
 
 from src.apis.dependencies import get_session
-from src.apis.posts.schema import CreatePostRequest, GetPostResponse
+from src.apis.posts.schema import CreatePostRequest, GetFollowingPostResponse
 from src.cache import redis_client
 from src.models.follow import Follow
 from src.models.post import Post
@@ -63,32 +63,27 @@ class PostService:
         return posts
 
     @staticmethod
-    def caching_following_posts_list(post_data: List[GetPostResponse], user_id: str):
+    def caching_following_posts_list(
+        post_data: List[GetFollowingPostResponse], user_id: str
+    ):
         cache = redis_client
         data_list = [item.model_dump_json() for item in post_data]
-        cache.set(
-            user_id + "_post", json.dumps(data_list), datetime.timedelta(seconds=60)
-        )
+        cache.set(user_id, json.dumps(data_list), datetime.timedelta(seconds=60))
 
     @staticmethod
     def add_caching_follower_posts_list(post: Post, followers_id: List[uuid.UUID]):
         cache = redis_client
 
-        item = GetPostResponse(
-            id=post.id,
-            contents=post.contents,
-            writer=post.writer,
-            created_at=post.created_at,
-        )
+        item = GetFollowingPostResponse(id=post.id)
 
         for follower_id in followers_id:
-            if cache_data := cache.get(str(follower_id) + "_post"):
+            if cache_data := cache.get(str(follower_id)):
                 cache_data = json.loads(cache_data)
                 cache_data.insert(0, item.model_dump_json())
                 if len(cache_data) > 100:
                     cache_data = cache_data[0 : -(len(cache_data) - 100)]
                 cache.set(
-                    str(follower_id) + "_post",
+                    str(follower_id),
                     json.dumps(cache_data),
                     datetime.timedelta(seconds=60),
                 )

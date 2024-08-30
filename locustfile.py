@@ -39,12 +39,20 @@ class UserBehavior(TaskSet):
             print(f"Login failed for {self.credential['username']}")
             self.access_token = None
 
-    @task
+    @task(weight=1)
     def test_api_with_token(self):
         if self.access_token:
             headers = {"Authorization": f"Bearer {self.access_token}"}
             # 토큰을 이용해 API 호출
             self.client.get("/posts", headers=headers)
+        else:
+            print(f"No access token for {self.credential['username']}")
+
+    @task(weight=3)
+    def test_api_with_following_posts(self):
+        if self.access_token:
+            headers = {"Authorization": f"Bearer {self.access_token}"}
+            self.client.get("/posts/following", headers=headers)
         else:
             print(f"No access token for {self.credential['username']}")
 
