@@ -1,18 +1,28 @@
 from sqlalchemy.ext.asyncio import create_async_engine
 from sqlalchemy.orm import sessionmaker
-from sqlmodel import SQLModel
+from sqlmodel import SQLModel, pool
 from sqlmodel.ext.asyncio.session import AsyncSession
 
 from src import config
 
-engine = create_async_engine(
-    url=config.db.url,
-    echo=config.db.echo,
-    pool_size=20,
-    max_overflow=30,
-    pool_pre_ping=True,
-    pool_recycle=500,
-)
+if "sqlite+aiosqlite:///:memory:" in config.db.url:
+    engine = create_async_engine(
+        url=config.db.url,
+        echo=config.db.echo,
+        connect_args={
+            "check_same_thread": False,
+        },
+        poolclass=pool.StaticPool,
+    )
+else:
+    engine = create_async_engine(
+        url=config.db.url,
+        echo=config.db.echo,
+        pool_size=20,
+        max_overflow=30,
+        pool_pre_ping=True,
+        pool_recycle=500,
+    )
 
 
 async_session = sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
