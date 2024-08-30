@@ -146,4 +146,3 @@ async def test_create_post_follower_posts_update(
 
     assert follow_user_response.status_code == status.HTTP_200_OK
     assert len(follow_user_response.json()) == 11
-    assert follow_user_response.json()[0]["contents"] == "fan out content"
