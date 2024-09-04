@@ -1,0 +1,14 @@
+version: '1'
+
+services:
+  prometheus:
+    image: prom/prometheus
+    extra_hosts:
+      - "host.docker.internal:${HOST_IP}"
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./config/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+    command:
+      - "--log.level=debug"
+      - "--config.file=/etc/prometheus/prometheus.yml"

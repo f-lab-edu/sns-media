@@ -28,10 +28,8 @@ class PostService:
 
         return posts
 
-    async def get_user_post(self, user_id: uuid.UUID, post_id: int) -> Post:
-        post = await self.session.exec(
-            select(Post).where(Post.writer == user_id, Post.id == post_id)
-        )
+    async def get_user_post(self, post_id: int) -> Post:
+        post = await self.session.exec(select(Post).where(Post.id == post_id))
         if not post:
             raise HTTPException(status_code=404, detail="Post not found")
 

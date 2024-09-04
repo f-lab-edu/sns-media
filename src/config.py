@@ -7,6 +7,12 @@ class DatabaseConfig(BaseSettings):
     echo: bool = Field(default=True, alias="DATABASE_ECHO")
 
 
+class RedisConfig(BaseSettings):
+    host: str = Field(default="localhost", alias="REDIS_HOST")
+    port: int = Field(default=6379, alias="REDIS_PORT")
+    db: int = Field(default=0, alias="REDIS_DB")
+
+
 class CORSConfig(BaseSettings):
     origins: str = Field(default="*", alias="CORS_ORIGINS")
     credentials: bool = Field(default=True, alias="CORS_CREDENTIALS")
@@ -22,3 +28,4 @@ class WebConfig(BaseSettings):
 db = DatabaseConfig()
 cors = CORSConfig()
 web = WebConfig()
+redis = RedisConfig()

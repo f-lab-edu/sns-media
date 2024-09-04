@@ -18,6 +18,7 @@ post_router.add_api_route(
     response_model=schema.CreatePostResponse,
     status_code=status.HTTP_201_CREATED,
 )
+
 post_router.add_api_route(
     methods=["GET"],
     path="",
