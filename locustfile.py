@@ -15,6 +15,7 @@ user_list = load_data("dummy_data.json")
 
 class UserBehavior(TaskSet):
     credential = None
+    following_post_ids = None
     access_token = None
 
     def on_start(self):
@@ -39,6 +40,10 @@ class UserBehavior(TaskSet):
             print(f"Login failed for {self.credential['username']}")
             self.access_token = None
 
+        headers = {"Authorization": f"Bearer {self.access_token}"}
+        response = self.client.get("/posts/following", headers=headers)
+        self.following_post_ids = response.json()
+
     @task(weight=1)
     def test_api_with_token(self):
         if self.access_token:
@@ -52,9 +57,24 @@ class UserBehavior(TaskSet):
     def test_api_with_following_posts(self):
         if self.access_token:
             headers = {"Authorization": f"Bearer {self.access_token}"}
-            self.client.get("/posts/following", headers=headers)
+            response = self.client.get("/posts/following", headers=headers)
+            self.following_post_ids = response.json()
         else:
             print(f"No access token for {self.credential['username']}")
+
+    @task(weight=6)
+    def test_api_with_get_following_posts_details(self):
+        if self.access_token and self.following_post_ids:
+            headers = {"Authorization": f"Bearer {self.access_token}"}
+            for i in range(10):
+                self.client.get(
+                    f"/posts/{random.choice(self.following_post_ids)['id']}",
+                    headers=headers,
+                )
+        else:
+            print(
+                f"No access token for {self.credential['username']} or no following_id post"
+            )
 
 
 class WebsiteUser(FastHttpUser):

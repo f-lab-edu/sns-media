@@ -18,10 +18,9 @@ else:
     engine = create_async_engine(
         url=config.db.url,
         echo=config.db.echo,
-        pool_size=20,
+        pool_size=50,
         max_overflow=30,
         pool_pre_ping=True,
-        pool_recycle=500,
     )
 
 

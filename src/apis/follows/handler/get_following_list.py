@@ -23,6 +23,6 @@ async def handler(
     )
 
     if not following_list:
-        raise HTTPException(status_code=404, detail="follower not found")
+        raise HTTPException(status_code=204, detail="follower not found")
 
     return GetFollowingListResponse(following_list=following_list)
