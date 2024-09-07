@@ -2,7 +2,13 @@ from typing import List
 
 from fastapi import APIRouter, status
 
-from src.apis.posts.handler import create_post, get_following_posts, get_post, get_posts
+from src.apis.posts.handler import (
+    create_post,
+    get_following_posts,
+    get_post,
+    get_posts,
+    update_post,
+)
 from src.apis.posts.schema import (
     CreatePostResponse,
     GetFollowingPostResponse,
@@ -15,7 +21,7 @@ post_router.add_api_route(
     methods=["POST"],
     path="",
     endpoint=create_post.handler,
-    response_model=schema.CreatePostResponse,
+    response_model=CreatePostResponse,
     status_code=status.HTTP_201_CREATED,
 )
 
@@ -40,5 +46,13 @@ post_router.add_api_route(
     path="/{post_id}",
     endpoint=get_post.handler,
     response_model=GetPostResponse,
+    status_code=status.HTTP_200_OK,
+)
+
+post_router.add_api_route(
+    methods=["PUT"],
+    path="/{post_id}",
+    endpoint=update_post.handler,
+    response_model=CreatePostResponse,
     status_code=status.HTTP_200_OK,
 )

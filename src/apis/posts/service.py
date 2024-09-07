@@ -60,6 +60,19 @@ class PostService:
 
         return posts
 
+    async def update_post(
+        self, request: CreatePostRequest, post: Post, user_id: str
+    ) -> Post:
+        if user_id != str(post.writer):
+            raise HTTPException(status_code=403, detail="You can't update this post")
+
+        post.contents = request.contents
+        self.session.add(post)
+        await self.session.commit()
+        await self.session.refresh(post)
+
+        return post
+
     @staticmethod
     def caching_following_posts_list(
         post_data: List[GetFollowingPostResponse], user_id: str
