@@ -15,7 +15,7 @@ async def handler(
 ) -> GetPostResponse:
     user_id: str = await user_service.decode_jwt(access_token)
     user: User | None = await user_service.get_user_by_id(user_id)
-    post = await post_service.get_user_post(post_id=post_id)
+    post = await post_service.get_post(post_id=post_id)
     if post is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
     return GetPostResponse(

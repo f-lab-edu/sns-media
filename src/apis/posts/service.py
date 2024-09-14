@@ -3,20 +3,27 @@ import json
 import uuid
 from typing import Annotated, List, Sequence
 
-from fastapi import Depends, HTTPException
+from fastapi import BackgroundTasks, Depends, HTTPException
 from sqlmodel import col, select
 from sqlmodel.ext.asyncio.session import AsyncSession
 
 from src.apis.dependencies import get_session
 from src.apis.posts.schema import CreatePostRequest, GetFollowingPostResponse
 from src.cache import redis_client
+from src.kafka import delivery_report, producer
 from src.models.follow import Follow
 from src.models.post import Post
 
 
 class PostService:
-    def __init__(self, session: Annotated[AsyncSession, Depends(get_session)]):
+    def __init__(
+        self,
+        session: Annotated[AsyncSession, Depends(get_session)],
+        background_tasks: BackgroundTasks,
+    ):
         self.session = session
+        self.producer = producer
+        self.background_tasks = background_tasks
 
     async def get_user_posts(self, user_id: uuid.UUID) -> Sequence[Post]:
         posts = (
@@ -33,7 +40,9 @@ class PostService:
         if not post:
             raise HTTPException(status_code=404, detail="Post not found")
 
-        return post.first()
+        post = post.first()
+
+        return post
 
     async def create_new_post(
         self, request: CreatePostRequest, user_id: uuid.UUID
@@ -42,6 +51,8 @@ class PostService:
         self.session.add(post)
         await self.session.commit()
         await self.session.refresh(post)
+
+        self.background_tasks.add_task(self.kafka_create_post, post)
 
         return post
 
@@ -71,6 +82,8 @@ class PostService:
         await self.session.commit()
         await self.session.refresh(post)
 
+        self.background_tasks.add_task(self.kafka_update_post, post)
+
         return post
 
     @staticmethod
@@ -98,3 +111,23 @@ class PostService:
                     json.dumps(cache_data),
                     datetime.timedelta(seconds=60),
                 )
+
+    @staticmethod
+    def kafka_create_post(post: Post):
+        producer.produce(
+            "post-cdc",
+            key=str(post.id),
+            value=post.model_dump_json(),
+            callback=delivery_report,
+        )
+        producer.flush()
+
+    @staticmethod
+    def kafka_update_post(post: Post):
+        producer.produce(
+            "post-cdc",
+            key=str(post.id),
+            value=post.model_dump_json(),
+            callback=delivery_report,
+        )
+        producer.flush()

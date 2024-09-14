@@ -21,6 +21,8 @@ aiomysql = "^0.2.0"
 cryptography = "^43.0.0"
 locust = "^2.31.4"
 prometheus-fastapi-instrumentator = "6.1.0"
+confluent-kafka = "^2.5.3"
+elasticsearch = "^8.15.1"
 
 
 [tool.poetry.group.dev.dependencies]
