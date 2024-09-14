@@ -3,20 +3,32 @@ import json
 import uuid
 from typing import Annotated, List, Sequence
 
-from fastapi import Depends, HTTPException
+from fastapi import BackgroundTasks, Depends, HTTPException
 from sqlmodel import col, select
 from sqlmodel.ext.asyncio.session import AsyncSession
 
 from src.apis.dependencies import get_session
-from src.apis.posts.schema import CreatePostRequest, GetFollowingPostResponse
+from src.apis.posts.schema import (
+    CreatePostRequest,
+    GetFollowingPostResponse,
+    GetPostResponse,
+)
 from src.cache import redis_client
+from src.elastic_search import es
+from src.kafka import delivery_report, producer
 from src.models.follow import Follow
 from src.models.post import Post
 
 
 class PostService:
-    def __init__(self, session: Annotated[AsyncSession, Depends(get_session)]):
+    def __init__(
+        self,
+        session: Annotated[AsyncSession, Depends(get_session)],
+        background_tasks: BackgroundTasks,
+    ):
         self.session = session
+        self.producer = producer
+        self.background_tasks = background_tasks
 
     async def get_user_posts(self, user_id: uuid.UUID) -> Sequence[Post]:
         posts = (
@@ -28,12 +40,35 @@ class PostService:
 
         return posts
 
-    async def get_user_post(self, post_id: int) -> Post:
+    async def get_search_posts(self, query: str) -> List[GetPostResponse]:
+        result = es.search(
+            index="posts",
+            body={"query": {"match": {"contents": query}}},  # 적절한 필드명과 검색 값으로 수정
+        )
+
+        results = result["hits"]["hits"]
+
+        if not results:
+            raise HTTPException(status_code=404, detail="Posts not found")
+
+        return [
+            GetPostResponse(
+                id=result["_source"]["id"],
+                contents=result["_source"]["contents"],
+                created_at=result["_source"]["created_at"],
+                writer=result["_source"]["writer"],
+            )
+            for result in results
+        ]
+
+    async def get_post(self, post_id: int) -> Post:
         post = await self.session.exec(select(Post).where(Post.id == post_id))
         if not post:
             raise HTTPException(status_code=404, detail="Post not found")
 
-        return post.first()
+        post = post.first()
+
+        return post
 
     async def create_new_post(
         self, request: CreatePostRequest, user_id: uuid.UUID
@@ -42,6 +77,8 @@ class PostService:
         self.session.add(post)
         await self.session.commit()
         await self.session.refresh(post)
+
+        self.background_tasks.add_task(self.kafka_create_post, post)
 
         return post
 
@@ -59,6 +96,21 @@ class PostService:
         posts = posts.all()
 
         return posts
+
+    async def update_post(
+        self, request: CreatePostRequest, post: Post, user_id: str
+    ) -> Post:
+        if user_id != str(post.writer):
+            raise HTTPException(status_code=403, detail="You can't update this post")
+
+        post.contents = request.contents
+        self.session.add(post)
+        await self.session.commit()
+        await self.session.refresh(post)
+
+        self.background_tasks.add_task(self.kafka_update_post, post)
+
+        return post
 
     @staticmethod
     def caching_following_posts_list(
@@ -85,3 +137,23 @@ class PostService:
                     json.dumps(cache_data),
                     datetime.timedelta(seconds=60),
                 )
+
+    @staticmethod
+    def kafka_create_post(post: Post):
+        producer.produce(
+            "post-cdc",
+            key=str(post.id),
+            value=post.model_dump_json(),
+            callback=delivery_report,
+        )
+        producer.flush()
+
+    @staticmethod
+    def kafka_update_post(post: Post):
+        producer.produce(
+            "post-cdc",
+            key=str(post.id),
+            value=post.model_dump_json(),
+            callback=delivery_report,
+        )
+        producer.flush()
