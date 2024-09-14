@@ -13,6 +13,14 @@ class RedisConfig(BaseSettings):
     db: int = Field(default=0, alias="REDIS_DB")
 
 
+class ElasticsearchConfig(BaseSettings):
+    host: str = Field(default="localhost", alias="ES_HOST")
+    port: int = Field(default=9200, alias="ES_PORT")
+    id: str = Field(default="id", alias="ES_ID")
+    password: str = Field(default="<PASSWORD>", alias="ES_PASSWORD")
+    verify_ssl: bool = Field(default=False, alias="ES_VERIFY_SSL")
+
+
 class CORSConfig(BaseSettings):
     origins: str = Field(default="*", alias="CORS_ORIGINS")
     credentials: bool = Field(default=True, alias="CORS_CREDENTIALS")
@@ -29,3 +37,4 @@ db = DatabaseConfig()
 cors = CORSConfig()
 web = WebConfig()
 redis = RedisConfig()
+elasticsearch = ElasticsearchConfig()

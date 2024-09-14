@@ -1,5 +1,6 @@
 import json
 import random
+import string
 
 from locust import FastHttpUser, TaskSet, between, task
 
@@ -40,41 +41,52 @@ class UserBehavior(TaskSet):
             print(f"Login failed for {self.credential['username']}")
             self.access_token = None
 
-        headers = {"Authorization": f"Bearer {self.access_token}"}
-        response = self.client.get("/posts/following", headers=headers)
-        self.following_post_ids = response.json()
+        # headers = {"Authorization": f"Bearer {self.access_token}"}
+        # response = self.client.get("/posts/following", headers=headers)
+        # self.following_post_ids = response.json()
 
-    @task(weight=1)
+    # @task(weight=1)
+    # def test_api_with_token(self):
+    #     if self.access_token:
+    #         headers = {"Authorization": f"Bearer {self.access_token}"}
+    #         # 토큰을 이용해 API 호출
+    #         self.client.get("/posts", headers=headers)
+    #     else:
+    #         print(f"No access token for {self.credential['username']}")
+
+    @task(weight=10)
     def test_api_with_token(self):
         if self.access_token:
             headers = {"Authorization": f"Bearer {self.access_token}"}
             # 토큰을 이용해 API 호출
-            self.client.get("/posts", headers=headers)
-        else:
-            print(f"No access token for {self.credential['username']}")
-
-    @task(weight=3)
-    def test_api_with_following_posts(self):
-        if self.access_token:
-            headers = {"Authorization": f"Bearer {self.access_token}"}
-            response = self.client.get("/posts/following", headers=headers)
-            self.following_post_ids = response.json()
-        else:
-            print(f"No access token for {self.credential['username']}")
-
-    @task(weight=6)
-    def test_api_with_get_following_posts_details(self):
-        if self.access_token and self.following_post_ids:
-            headers = {"Authorization": f"Bearer {self.access_token}"}
-            for i in range(10):
-                self.client.get(
-                    f"/posts/{random.choice(self.following_post_ids)['id']}",
-                    headers=headers,
-                )
-        else:
-            print(
-                f"No access token for {self.credential['username']} or no following_id post"
+            self.client.get(
+                f"/posts?search={random.choice(string.ascii_letters)}", headers=headers
             )
+        else:
+            print(f"No access token for {self.credential['username']}")
+
+    # @task(weight=3)
+    # def test_api_with_following_posts(self):
+    #     if self.access_token:
+    #         headers = {"Authorization": f"Bearer {self.access_token}"}
+    #         response = self.client.get("/posts/following", headers=headers)
+    #         self.following_post_ids = response.json()
+    #     else:
+    #         print(f"No access token for {self.credential['username']}")
+
+    # @task(weight=6)
+    # def test_api_with_get_following_posts_details(self):
+    #     if self.access_token and self.following_post_ids:
+    #         headers = {"Authorization": f"Bearer {self.access_token}"}
+    #         for i in range(10):
+    #             self.client.get(
+    #                 f"/posts/{random.choice(self.following_post_ids)['id']}",
+    #                 headers=headers,
+    #             )
+    #     else:
+    #         print(
+    #             f"No access token for {self.credential['username']} or no following_id post"
+    #         )
 
 
 class WebsiteUser(FastHttpUser):

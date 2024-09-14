@@ -10,13 +10,19 @@ from src.security import get_authorization_header
 
 
 async def handler(
+    search: str = "",
     access_token: str = Depends(get_authorization_header),
     user_service: UserService = Depends(),
     post_service: PostService = Depends(),
 ) -> List[GetPostResponse]:
     user_id: str = await user_service.decode_jwt(access_token)
     user: User | None = await user_service.get_user_by_id(user_id)
-    posts = await post_service.get_user_posts(user_id=user.id)
+    if search:
+        posts = await post_service.get_search_posts(search)
+        return posts
+    else:
+        posts = await post_service.get_user_posts(user_id=user.id)
+
     return [
         GetPostResponse(
             id=post.id,

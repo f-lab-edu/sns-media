@@ -8,8 +8,13 @@ from sqlmodel import col, select
 from sqlmodel.ext.asyncio.session import AsyncSession
 
 from src.apis.dependencies import get_session
-from src.apis.posts.schema import CreatePostRequest, GetFollowingPostResponse
+from src.apis.posts.schema import (
+    CreatePostRequest,
+    GetFollowingPostResponse,
+    GetPostResponse,
+)
 from src.cache import redis_client
+from src.elastic_search import es
 from src.kafka import delivery_report, producer
 from src.models.follow import Follow
 from src.models.post import Post
@@ -35,7 +40,28 @@ class PostService:
 
         return posts
 
-    async def get_user_post(self, post_id: int) -> Post:
+    async def get_search_posts(self, query: str) -> List[GetPostResponse]:
+        result = es.search(
+            index="posts",
+            body={"query": {"match": {"contents": query}}},  # 적절한 필드명과 검색 값으로 수정
+        )
+
+        results = result["hits"]["hits"]
+
+        if not results:
+            raise HTTPException(status_code=404, detail="Posts not found")
+
+        return [
+            GetPostResponse(
+                id=result["_source"]["id"],
+                contents=result["_source"]["contents"],
+                created_at=result["_source"]["created_at"],
+                writer=result["_source"]["writer"],
+            )
+            for result in results
+        ]
+
+    async def get_post(self, post_id: int) -> Post:
         post = await self.session.exec(select(Post).where(Post.id == post_id))
         if not post:
             raise HTTPException(status_code=404, detail="Post not found")

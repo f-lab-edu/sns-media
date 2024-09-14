@@ -16,7 +16,7 @@ async def handler(
 ) -> CreatePostResponse:
     user_id: str = await user_service.decode_jwt(access_token)
     user: User | None = await user_service.get_user_by_id(user_id)
-    post = await post_service.get_user_post(post_id)
+    post = await post_service.get_post(post_id)
     post = await post_service.update_post(request, post, user_id)
 
     return CreatePostResponse(
